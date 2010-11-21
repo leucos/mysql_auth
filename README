@@ -1,5 +1,5 @@
 
 SQUID authentication helper for MySQL stored credentials
 
-Please see source for informations
+Please see source and mysql_auth.conf  for information
 
