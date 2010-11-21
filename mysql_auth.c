@@ -305,27 +305,22 @@ int main(int argc, char *argv[])
   logLevel = 3;
   doReconnect = cfg_false;
 
-  snprintf(message, MESSAGESIZE, "version %s starting (pid %d) with config file %s", version, (int) self, argv[1]);
+  snprintf(message, MESSAGESIZE, "version %s starting (pid %d)", version, (int) self);
   log_msg(ALERT_LEVEL, message);
 
-	/* no config file supplied, let's try standard locations */
-	if (argv[1]) {
-		strncpy(configFile, argv[1], BUFSIZE);
-	} else {
-		configFile=strdup("/etc/squid/mysql_auth.conf");
-		if (!file_exists(configFile)) {
-			configFile=strdup("/etc/squid3/mysql_auth.conf");
-		}
-	}
+	configFile=strdup("/etc/squid3/mysql_auth.conf");
 
 	if (! file_exists(configFile) ) {
-    snprintf(message, MESSAGESIZE, "fatal error : unable to open configuration file %s", argv[1]);
+    snprintf(message, MESSAGESIZE, "fatal error : unable to open configuration file %s", configFile);
     log_msg(ALERT_LEVEL, message);
     exit(EXIT_FAILURE);
   }
 
+  snprintf(message, MESSAGESIZE, "using config file %s", configFile);
+  log_msg(ALERT_LEVEL, message);
+
   cfg = cfg_init(opts, 0);
-  cfg_parse(cfg, argv[1]);
+  cfg_parse(cfg, configFile);
 
   if (! check_config)
     exit(EXIT_FAILURE);
