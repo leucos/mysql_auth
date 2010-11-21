@@ -307,7 +307,7 @@ int main(int argc, char *argv[])
   snprintf(message, MESSAGESIZE, "version %s starting (pid %d) with config file %s", version, (int) self, argv[1]);
   log_msg(ALERT_LEVEL, message);
 
-  if (! file_exists(argv[0]) ) {
+  if (! file_exists(argv[1]) ) {
     snprintf(message, MESSAGESIZE, "fatal error : unable to open configuration file %s", argv[1]);
     log_msg(ALERT_LEVEL, message);
     exit(EXIT_FAILURE);
@@ -371,17 +371,17 @@ int main(int argc, char *argv[])
     snprintf(message, MESSAGESIZE, "checking %s/****** ", buf);
     log_msg(ALERT_LEVEL, message);
 
-#ifdef MYSQL_SUX
-    /* close the connection... */
-    log_msg(INFO_LEVEL, "MYSQL_SUX mode on - closing db connection"); 
-    if (sock) {
-      mysql_close(sock);
-      sock = NULL;
-    }
-    /* ... and ... reopen thanks to the sordid blocking API
-     * and unsupported MYSQL_OPT_*_TIMEOUTs options
-     */ 
-#endif /* MYSQL_SUX */
+		if (doReconnect) {
+			/* close the connection... */
+			log_msg(INFO_LEVEL, "MYSQL_SUX mode on - closing db connection"); 
+			if (sock) {
+				mysql_close(sock);
+				sock = NULL;
+			}
+			/* ... and ... reopen thanks to the sordid blocking API
+			 * and unsupported MYSQL_OPT_*_TIMEOUTs options
+			 */
+		}
   
     /* check if db connection is ok */
     sock = check_connection(sock);
