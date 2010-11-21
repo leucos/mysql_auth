@@ -71,7 +71,7 @@ cfg_bool_t doReconnect = cfg_false;
 int logLevel = 3;
 
 char *dbHost = NULL;
-int dbPort = 0;
+int  dbPort = 0;
 char *dbUser = NULL;
 char *dbPassword = NULL;
 
@@ -271,6 +271,7 @@ int main(int argc, char *argv[])
   char buf[BUFSIZE], qbuf[BUFSIZE];
   char message[MESSAGESIZE];
   char *p = NULL;
+	char *configFile = NULL;
   
   MYSQL *sock;
   MYSQL_RES *res;
@@ -307,7 +308,17 @@ int main(int argc, char *argv[])
   snprintf(message, MESSAGESIZE, "version %s starting (pid %d) with config file %s", version, (int) self, argv[1]);
   log_msg(ALERT_LEVEL, message);
 
-  if (! file_exists(argv[1]) ) {
+	/* no config file supplied, let's try standard locations */
+	if (argv[1]) {
+		strncpy(configFile, argv[1], BUFSIZE);
+	} else {
+		configFile=strdup("/etc/squid/mysql_auth.conf");
+		if (!file_exists(configFile)) {
+			configFile=strdup("/etc/squid3/mysql_auth.conf");
+		}
+	}
+
+	if (! file_exists(configFile) ) {
     snprintf(message, MESSAGESIZE, "fatal error : unable to open configuration file %s", argv[1]);
     log_msg(ALERT_LEVEL, message);
     exit(EXIT_FAILURE);
@@ -394,21 +405,20 @@ int main(int argc, char *argv[])
     sprintf(qbuf, "SELECT %s FROM %s WHERE %s ='%s' AND %s ='%s'", 
             dbUserColName, dbTableName, dbUserColName, buf, dbPasswordColName, p);
 
-    if(mysql_query(sock,qbuf) || !(res=mysql_store_result(sock)))
-      {
-        /* query failed */
-        if (mysql_errno(sock)) {
-          snprintf(message, MESSAGESIZE, "database connection error : %d %s", mysql_errno(sock), mysql_error(sock));
-          log_msg(ALERT_LEVEL, message);
-        } else {
-          log_msg(ALERT_LEVEL, "database connection error : query failed but mysql error not set !!");
-        }
+    if(mysql_query(sock,qbuf) || !(res=mysql_store_result(sock))) {
+			/* query failed */
+			if (mysql_errno(sock)) {
+				snprintf(message, MESSAGESIZE, "database connection error : %d %s", mysql_errno(sock), mysql_error(sock));
+				log_msg(ALERT_LEVEL, message);
+			} else {
+				log_msg(ALERT_LEVEL, "database connection error : query failed but mysql error not set !!");
+			}
         log_msg(ALERT_LEVEL, "auth failed");
         printf("ERR\n");
         mysql_close(sock);
         sock = NULL;
         continue;
-      }
+		}
     if ( res->row_count !=0 ) {
       log_msg(ALERT_LEVEL, "auth succeeded");
       printf("OK\n");
